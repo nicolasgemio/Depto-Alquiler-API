@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Departamentos</title>
+</head>
+<body>
+    <style>
+        #department-list {
+            list-style-type: none;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+    
+        #department-list li {
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+    
+        .department-title {
+            font-weight: bold;
+        }
+
+        .orange {
+            color: orange;
+        }
+
+        .green {
+            color: green;
+        }
+        
+
+        .red {
+            color: red;
+        }
+    
+        .rejected {
+            color: red;
+        }
+        .light-green {
+            background-color: lightgreen !important;
+        }
+        .department-link {
+            color: #007BFF;
+            text-decoration: none;
+            margin-bottom: 10px;
+        }
+    
+        .department-link:hover {
+            text-decoration: underline;
+        }
+    
+        .department-info {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+    
+        .price {
+            font-weight: bold;
+            color: #28a745;
+        }
+    
+        .creation-date {
+            font-size: 0.85em;
+            color: #888;
+        }
+    
+        .button-reject {
+            background-color: #ff5100;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block; /* Evita que ocupe todo el ancho */
+            max-width: 150px; /* Define un ancho máximo */
+            text-align: center; /* Asegura que el texto esté centrado */
+        }
+
+        .button-favorite {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block; /* Evita que ocupe todo el ancho */
+            max-width: 150px; /* Define un ancho máximo */
+            text-align: center; /* Asegura que el texto esté centrado */
+        }
+    
+        button:hover {
+            background-color: #0056b3;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px; /* Espacio entre botones */
+        }
+    </style>
+
+    <h1>Lista de Departamentos</h1>
+    <p>Total de departamentos: {{ departments|length }}</p>
+    <ul id="department-list">
+        {% for department in departments %}
+        <li class="{% if department.favorito_n and department.favorito_a %} light-green {% endif %}">
+            <strong class="department-title 
+                {% if (department.rejected_n or department.rejected_a) and (department.favorito_n or department.favorito_a) %}
+                    orange
+                {% elif not (department.rejected_n or department.rejected_a) and (department.favorito_n or department.favorito_a) %}
+                    green
+                {% elif (department.rejected_n or department.rejected_a) and not (department.favorito_n or department.favorito_a) %}
+                    red
+                {% endif %}
+                ">
+                {{ department.codigo }} - {{ department.title }}
+            </strong>
+            <a href="{{ department.link }}" class="department-link" target="_blank">Ver</a>
+
+            <div class="department-info">
+                <span class="price">Precio: {{ department.precio }}</span><br>
+                <span class="creation-date">Creado el: {{ department.creacion }}</span>
+            </div>
+
+            <div class="button-container">
+                {% if (person == 'nico' and not department.rejected_n) or (person == 'ampi' and not department.rejected_a) %}
+                <button class="button-reject" onclick="rejectDepartment('{{ department.id }}', '{{ person }}')">Rechazar</button>
+                {% endif %}
+            
+                {% if (person == 'nico' and not department.favorito_n) or (person == 'ampi' and not department.favorito_a) %}
+                <button class="button-favorite" onclick="favoriteDepartment('{{ department.id }}', '{{ person }}')">Favorito</button>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        async function rejectDepartment(departmentId, person) {
+            const response = await fetch(`/reject/${departmentId}/${person}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                alert(`Departamento ${departmentId} rechazado`);
+                location.reload();  // Recargar la página para reflejar los cambios
+            } else {
+                alert('Error al rechazar el departamento');
+            }
+        }
+
+        async function favoriteDepartment(departmentId, person) {
+            const response = await fetch(`/favorite/${departmentId}/${person}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                alert(`Departamento ${departmentId} marcado como favorito`);
+                location.reload();  // Recargar la página para reflejar los cambios
+            } else {
+                alert('Error al marcar el departamento como favorito');
+            }
+        }
+    </script>
+</body>
+</html>
