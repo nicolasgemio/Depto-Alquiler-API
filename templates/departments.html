@@ -6,7 +6,51 @@
     <title>Lista de Departamentos</title>
 </head>
 <body>
+    <!-- Modal de comentario -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content">
+            <h2>Agregar comentario</h2>
+            <textarea id="commentText" placeholder="Escribe tu comentario aquí..."></textarea>
+            <div class="modal-buttons">
+                <button class="button-favorite" onclick="submitComment()">Comentar</button>
+                <button class="button-comment" onclick="closeModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
         #department-list {
             list-style-type: none;
             padding: 20px;
@@ -72,12 +116,22 @@
             font-size: 0.85em;
             color: #888;
         }
+        
+        .counter-p {
+            font-size: 0.85em;
+            color: #111111;
+        }
+
+        .comment-format {
+            font-size: 0.85em;
+            color: #302828;
+        }
     
         .button-reject {
             background-color: #ff5100;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 25px;
             font-size: 1em;
             border-radius: 4px;
             cursor: pointer;
@@ -90,7 +144,20 @@
             background-color: #007BFF;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 25px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block; /* Evita que ocupe todo el ancho */
+            max-width: 150px; /* Define un ancho máximo */
+            text-align: center; /* Asegura que el texto esté centrado */
+        }
+
+        .button-comment {
+            background-color: #010101;
+            color: white;
+            border: none;
+            padding: 8px 25px;
             font-size: 1em;
             border-radius: 4px;
             cursor: pointer;
@@ -103,13 +170,88 @@
             background-color: #0056b3;
         }
         .button-container {
+            margin-bottom: 10px;
             display: flex;
             gap: 10px; /* Espacio entre botones */
         }
+        
+        .comment-container {
+            display: flex;
+            font-size: 0.9em;
+            gap: 10px; /* Espacio entre botones */
+            margin-bottom: 5px;
+        }
+
+        .rounded-box-nico {
+            border: 2px solid #3498db; /* Color del borde */
+            border-radius: 10px; /* Bordes redondeados */
+            padding: 2px 10px; /* Espaciado interno */
+            max-width: 300px;
+            text-align: center;
+            display: inline-block; /* Para que se ajuste al contenido */
+            background-color: #f0f8ff; /* Color de fondo opcional */
+        }
+
+        .rounded-box-ampi {
+            border: 2px solid #a05b8a; /* Color del borde */
+            border-radius: 10px; /* Bordes redondeados */
+            padding: 2px 10px; /* Espaciado interno */
+            max-width: 300px;
+            text-align: center;
+            display: inline-block; /* Para que se ajuste al contenido */
+            background-color: #f0f8ff; /* Color de fondo opcional */
+        }
     </style>
 
+    <script>
+        let currentDepartment = null;
+        let currentPerson = null;
+
+        function commentDepartment(departmentId, person) {
+            currentDepartment = departmentId;
+            currentPerson = person;
+            document.getElementById("commentModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("commentModal").style.display = "none";
+        }
+
+        async function submitComment() {
+            const comment = document.getElementById("commentText").value;
+            if (!comment.trim()) {
+                alert("El comentario no puede estar vacío.");
+                return;
+            }
+
+            const response = await fetch(`/comment/${currentDepartment}/${currentPerson}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comentario: comment })
+            });
+
+            if (response.ok) {
+                closeModal();
+                location.reload();
+            } else {
+                alert("Error al enviar el comentario.");
+            }
+        }
+    </script>
+
     <h1>Lista de Departamentos</h1>
-    <p>Total de departamentos: {{ departments|length }}</p>
+    <span class="counter-p">Total de departamentos: {{ departments|length }}</p>
+    <span class="counter-p">Rechazados de Nico / Ampi: {{ departments | selectattr("rejected_n", "equalto", True) | list | length }} / {{ departments | selectattr("rejected_a", "equalto", True) | list | length }}</span>
+    <span class="counter-p">Favoritos de Nico / Ampi: {{ departments | selectattr("favorito_n", "equalto", True) | list | length }} / {{ departments | selectattr("favorito_a", "equalto", True) | list | length }}</span>
+    <span class="counter-p">Sin ninguna acción: 
+        {{ departments 
+            | rejectattr("rejected_n", "equalto", True) 
+            | rejectattr("rejected_a", "equalto", True) 
+            | rejectattr("favorito_n", "equalto", True) 
+            | rejectattr("favorito_a", "equalto", True) 
+            | list | length 
+        }}
+    </span>
     <ul id="department-list">
         {% for department in departments %}
         <li class="{% if department.favorito_n and department.favorito_a %} light-green {% endif %}">
@@ -131,20 +273,40 @@
                 <span class="creation-date">Creado el: {{ department.creacion }}</span>
             </div>
 
+            {% if department.comentario_n %}
+            <div class="comment-container">
+                <span class="comment-format rounded-box-nico">N: {{ department.comentario_n }}</span>
+            </div>
+            {% endif %}
+            {% if department.comentario_a %}
+            <div class="comment-container">
+                <span class="comment-format rounded-box-ampi">A: {{ department.comentario_a }}</span>
+            </div>
+            {% endif %}
+
             <div class="button-container">
                 {% if (person == 'nico' and not department.rejected_n) or (person == 'ampi' and not department.rejected_a) %}
-                <button class="button-reject" onclick="rejectDepartment('{{ department.id }}', '{{ person }}')">Rechazar</button>
+                <button class="button-reject" 
+                    onmousedown="startRemoveTimer('{{ department.id }}')" 
+                    onmouseup="clearRemoveTimer()" 
+                    onmouseleave="clearRemoveTimer()" 
+                    onclick="rejectDepartment('{{ department.id }}', '{{ person }}')"
+                    >👎</button>
                 {% endif %}
             
                 {% if (person == 'nico' and not department.favorito_n) or (person == 'ampi' and not department.favorito_a) %}
-                <button class="button-favorite" onclick="favoriteDepartment('{{ department.id }}', '{{ person }}')">Favorito</button>
+                <button class="button-favorite" onclick="favoriteDepartment('{{ department.id }}', '{{ person }}')">👍</button>
                 {% endif %}
+
+                <button class="button-comment" onclick="commentDepartment('{{ department.id }}', '{{ person }}')">💬</button>
             </div>
         </li>
         {% endfor %}
     </ul>
 
     <script>
+        let removeTimeout; // Variable para almacenar el temporizador
+
         async function rejectDepartment(departmentId, person) {
             const response = await fetch(`/reject/${departmentId}/${person}`, {
                 method: 'POST'
@@ -166,6 +328,35 @@
                 location.reload();  // Recargar la página para reflejar los cambios
             } else {
                 alert('Error al marcar el departamento como favorito');
+            }
+        }
+
+        async function commentDepartment(departmentId, person) {
+            currentDepartment = departmentId;
+            currentPerson = person;
+            document.getElementById("commentModal").style.display = "flex"; // 💡 Muestra el modal
+        }
+
+        function startRemoveTimer(departmentId) {
+            rejectTimeout = setTimeout(() => {
+                removeDepartment(departmentId);
+            }, 2000); // Espera 2 segundos antes de ejecutar la acción
+        }
+
+        function clearRemoveTimer() {
+            clearTimeout(removeTimeout); // Cancela la acción si se suelta antes
+        }
+
+        async function removeDepartment(departmentId) {
+            const response = await fetch(`/remove/${departmentId}`, {
+                 method: 'POST'
+            });
+
+            if (response.ok) {
+                alert(`Departamento ${departmentId} removido`);
+                location.reload();
+            } else {
+                alert('Error al remover el departamento');
             }
         }
     </script>

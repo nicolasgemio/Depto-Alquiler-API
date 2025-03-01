@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import firebase_admin
 from firebase_admin import credentials, firestore
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from datetime import datetime
 import pytz
+from pydantic import BaseModel
 # Inicializar Firebase
 # firebase_config = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
 # cred = credentials.Certificate(firebase_config)
@@ -51,7 +52,9 @@ async def get_departments(request: Request):
         "creacion": get_local_time(doc.to_dict().get('creacion')),
         "favorito_n": doc.to_dict().get('favorito_n', False),
         "favorito_a": doc.to_dict().get('favorito_a', False),
-        "codigo": doc.to_dict().get('codigo')
+        "codigo": doc.to_dict().get('codigo'),
+        "comentario_n": doc.to_dict().get('comentario_n', ''),
+        "comentario_a": doc.to_dict().get('comentario_a', '')
         } for doc in combined_docs]
     
     # Se pasa la lista de departamentos al template HTML
@@ -85,7 +88,9 @@ async def get_departments(request: Request):
         "creacion": get_local_time(doc.to_dict().get('creacion')),
         "favorito_n": doc.to_dict().get('favorito_n', False),
         "favorito_a": doc.to_dict().get('favorito_a', False),
-        "codigo": doc.to_dict().get('codigo')
+        "codigo": doc.to_dict().get('codigo'),
+        "comentario_n": doc.to_dict().get('comentario_n', ''),
+        "comentario_a": doc.to_dict().get('comentario_a', '')
         } for doc in combined_docs]
 
     # Se pasa la lista de departamentos al template HTML
@@ -100,13 +105,24 @@ def obtener_departamentos():
 def rechazar_departamento(departamento_id: str, person: str):
     if person == 'nico':
         db.collection("deptos").document(departamento_id).update({"rejected_n": True})
-        db.collection("deptos").document(departamento_id).update({"favorite_n": False})
+        db.collection("deptos").document(departamento_id).update({"favorito_n": False})
     if person == 'ampi':
         db.collection("deptos").document(departamento_id).update({"rejected_a": True})
-        db.collection("deptos").document(departamento_id).update({"favorite_a": False})
+        db.collection("deptos").document(departamento_id).update({"favorito_a": False})
     else:
         return {"mensaje": "Departamento no rechazado"}
     return {"mensaje": "Departamento rechazado"}
+
+@app.post("/remove/{departamento_id}")
+def removeDepartment(departamento_id: str):
+    
+    db.collection("deptos").document(departamento_id).update({"favorito_n": False})
+    db.collection("deptos").document(departamento_id).update({"favorito_a": False})
+
+    db.collection("deptos").document(departamento_id).update({"rejected_n": True})
+    db.collection("deptos").document(departamento_id).update({"rejected_a": True})
+
+    return {"mensaje": "Departamento removido"}
 
 if __name__ == "__main__":
     import uvicorn
@@ -128,6 +144,25 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
+class CommentRequest(BaseModel):
+    comentario: str
+
+@app.post("/comment/{departamento_id}/{person}")
+def comentar_departamento(departamento_id: str, person: str, request: CommentRequest):
+    comentario = request.comentario
+
+    if person not in ['nico', 'ampi']:
+        raise HTTPException(status_code=400, detail="Persona no válida")
+
+    campo = "comentario_n" if person == "nico" else "comentario_a"
+    
+    db.collection("deptos").document(departamento_id).update({campo: comentario})
+    
+    return {"mensaje": "Departamento comentado"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 def sort_key_ampi(doc):
     data = doc.to_dict()
