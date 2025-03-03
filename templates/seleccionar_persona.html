@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Departamentos</title>
+    <script src="{{ url_for('static', path='/script.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Modal de comentario -->
+    <h1>Seleccionar Persona:</h1>
+    <label for="personSelector">Ver como:</label>
+    <select id="personSelector">
+        <option value="nico">Nico</option>
+        <option value="ampi">Ampi</option>
+    </select>
+    </br>
+    </br>
+    <button onclick="setPersonCookie()" class="button-comment">Guardar</button>
+</body>
+</html>

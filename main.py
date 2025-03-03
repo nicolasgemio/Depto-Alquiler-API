@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 import firebase_admin
 from firebase_admin import credentials, firestore
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,9 +7,7 @@ from fastapi.responses import HTMLResponse
 from datetime import datetime
 import pytz
 from pydantic import BaseModel
-# Inicializar Firebase
-# firebase_config = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
-# cred = credentials.Certificate(firebase_config)
+from fastapi.staticfiles import StaticFiles
 
 cred = credentials.Certificate("scrapping-deptos-firebase-adminsdk-fbsvc-6339a65ce9.json")
 firebase_admin.initialize_app(cred)
@@ -17,6 +15,7 @@ db = firestore.client()
 from starlette.requests import Request
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 app.add_middleware(
@@ -27,9 +26,16 @@ app.add_middleware(
     allow_headers=["*"],  # Permite todos los headers
 )
 
-@app.get("/departments_nico", response_class=HTMLResponse)
-async def get_departments(request: Request):
+@app.get("/seleccionar-persona", response_class=HTMLResponse)
+async def select_person(request: Request):
+    return templates.TemplateResponse("departments.html", {"request": request })
+
+@app.get("/departments", response_class=HTMLResponse)
+async def get_departments(request: Request, response: Response):
     deptos_dict = {}
+    person = request.cookies.get("person")
+    if not person:
+        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
 
     for doc in db.collection("deptos").where("rejected_n", "==", False).stream():
         deptos_dict[doc.id] = doc
@@ -54,31 +60,27 @@ async def get_departments(request: Request):
         "favorito_a": doc.to_dict().get('favorito_a', False),
         "codigo": doc.to_dict().get('codigo'),
         "comentario_n": doc.to_dict().get('comentario_n', ''),
-        "comentario_a": doc.to_dict().get('comentario_a', '')
+        "comentario_a": doc.to_dict().get('comentario_a', ''),
+        "direccion": doc.to_dict().get('direccion', '')
         } for doc in combined_docs]
     
     # Se pasa la lista de departamentos al template HTML
-    return templates.TemplateResponse("departments.html", {"request": request, "departments": departments, "person": "nico"})
+    return templates.TemplateResponse("departments.html", {"request": request, "departments": departments, "person": person})
 
-@app.get("/departments_ampi", response_class=HTMLResponse)
-async def get_departments(request: Request):
-    deptos_dict = {}
+@app.get('/departments/{department_id}')
+async def department_detail(request: Request, department_id: str):
 
-    # Obtener departamentos donde rejected_n es False
-    for doc in db.collection("deptos").where("rejected_n", "==", False).stream():
-        deptos_dict[doc.id] = doc
+    person = request.cookies.get("person")
+    if not person:
+        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
+    
+    doc_ref = db.collection("deptos").document(department_id)
+    doc = doc_ref.get()
 
-    # Obtener departamentos donde rejected_a es False (sin duplicar los que ya están)
-    for doc in db.collection("deptos").where("rejected_a", "==", False).stream():
-        deptos_dict[doc.id] = doc  # Si ya está en el diccionario, se sobrescribe
+    if not doc.exists:
+        return {"error": "Departamento no encontrado"}
 
-    # Convertir a lista y ordenar con sort_key_ampi
-    combined_docs = sorted(
-        deptos_dict.values(),  # Tomamos solo los valores únicos
-        key=sort_key_ampi,
-    )
-
-    departments = [{
+    department = {
         "id": doc.id, 
         "title": doc.to_dict().get('titulo'), 
         "link": doc.to_dict().get('link'), 
@@ -90,19 +92,26 @@ async def get_departments(request: Request):
         "favorito_a": doc.to_dict().get('favorito_a', False),
         "codigo": doc.to_dict().get('codigo'),
         "comentario_n": doc.to_dict().get('comentario_n', ''),
-        "comentario_a": doc.to_dict().get('comentario_a', '')
-        } for doc in combined_docs]
+        "comentario_a": doc.to_dict().get('comentario_a', ''),
+        "direccion": doc.to_dict().get('direccion', '')
+        }
 
-    # Se pasa la lista de departamentos al template HTML
-    return templates.TemplateResponse("departments.html", {"request": request, "departments": departments, "person": "ampi"})
+    return templates.TemplateResponse(
+        "department_detail.html",
+        {"request": request, "department": department, "person": person }
+    )
 
 @app.get("/all")
 def obtener_departamentos():
     docs = db.collection("deptos").stream()
     return [{"id": doc.id, **doc.to_dict()} for doc in docs]
 
-@app.post("/reject/{departamento_id}/{person}")
-def rechazar_departamento(departamento_id: str, person: str):
+@app.post("/reject/{departamento_id}")
+def rechazar_departamento(departamento_id: str, request: Request):
+    person = request.cookies.get("person")
+    if not person:
+        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
+    
     if person == 'nico':
         db.collection("deptos").document(departamento_id).update({"rejected_n": True})
         db.collection("deptos").document(departamento_id).update({"favorito_n": False})
@@ -128,8 +137,12 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-@app.post("/favorite/{departamento_id}/{person}")
-def marcar_departamento(departamento_id: str, person: str):
+@app.post("/favorite/{departamento_id}")
+def marcar_departamento(departamento_id: str, request: Request):
+    person = request.cookies.get("person")
+    if not person:
+        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
+    
     if person == 'nico':
         db.collection("deptos").document(departamento_id).update({"favorito_n": True})
         db.collection("deptos").document(departamento_id).update({"rejected_n": False})
@@ -147,9 +160,13 @@ if __name__ == "__main__":
 class CommentRequest(BaseModel):
     comentario: str
 
-@app.post("/comment/{departamento_id}/{person}")
-def comentar_departamento(departamento_id: str, person: str, request: CommentRequest):
-    comentario = request.comentario
+@app.post("/comment/{departamento_id}")
+def comentar_departamento(departamento_id: str, request: Request, body: CommentRequest):
+    comentario = body.comentario
+
+    person = request.cookies.get("person")
+    if not person:
+        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
 
     if person not in ['nico', 'ampi']:
         raise HTTPException(status_code=400, detail="Persona no válida")
@@ -159,6 +176,22 @@ def comentar_departamento(departamento_id: str, person: str, request: CommentReq
     db.collection("deptos").document(departamento_id).update({campo: comentario})
     
     return {"mensaje": "Departamento comentado"}
+
+@app.post("/remove/{departamento_id}")
+def remover_departamento(departamento_id: str, request: Request):
+    person = request.cookies.get("person")
+    if not person:
+        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
+    
+    if person == 'nico':
+        db.collection("deptos").document(departamento_id).update({"favorito_n": True})
+        db.collection("deptos").document(departamento_id).update({"rejected_n": False})
+    if person == 'ampi':
+        db.collection("deptos").document(departamento_id).update({"favorito_a": True})
+        db.collection("deptos").document(departamento_id).update({"rejected_a": False})
+    else:
+        return {"mensaje": "Departamento no rechazado"}
+    return {"mensaje": "Departamento rechazado"}
 
 if __name__ == "__main__":
     import uvicorn
