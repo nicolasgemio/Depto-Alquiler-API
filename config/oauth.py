@@ -1,8 +1,5 @@
 from authlib.integrations.starlette_client import OAuth
-from dotenv import load_dotenv
 import os
-
-load_dotenv('config/.env')
 
 oauth = OAuth()
 oauth.register(

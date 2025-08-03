@@ -40,6 +40,12 @@ textarea {
     font-family: Arial, sans-serif;
 }
 
+#comment-list {
+    list-style-type: none;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
 #department-list li {
     background-color: #f9f9f9;
     margin-bottom: 15px;
@@ -216,6 +222,11 @@ button:hover {
     font-size: 0.9em;
     gap: 10px; /* Espacio entre botones */
     margin-bottom: 5px;
+}
+
+.comment-date {
+    font-size: 0.4em;
+    color: #888;
 }
 
 .rounded-box-nico {

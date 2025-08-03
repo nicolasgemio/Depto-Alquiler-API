@@ -23,64 +23,71 @@
 
     <h1>Lista de Departamentos</h1>
     <span class="counter-p">Total de departamentos: {{ departments|length }}</span></br>
-    <span class="counter-p">Rechazados de Nico / Ampi: {{ departments | selectattr("rejected_n", "equalto", True) | list | length }} / {{ departments | selectattr("rejected_a", "equalto", True) | list | length }}</span></br>
-    <span class="counter-p">Favoritos de Nico / Ampi: {{ departments | selectattr("favorito_n", "equalto", True) | list | length }} / {{ departments | selectattr("favorito_a", "equalto", True) | list | length }}</span></br>
-    <span class="counter-p">Sin ninguna acción: 
-        {{ departments 
-            | rejectattr("rejected_n", "equalto", True) 
-            | rejectattr("rejected_a", "equalto", True) 
-            | rejectattr("favorito_n", "equalto", True) 
-            | rejectattr("favorito_a", "equalto", True) 
-            | list | length 
-        }}
-    </span>
+   
     <ul id="department-list">
-        {% for department in departments %}
-        <li class="{% if department.favorito_n and department.favorito_a %} light-green {% endif %}">
-            <a href="https://scarpdepto.vercel.app/departments/{{ department.id }}" class="department-link">
-                <strong class="department-title 
-                    {% if (department.rejected_n or department.rejected_a) and (department.favorito_n or department.favorito_a) %}
-                        orange
-                    {% elif not (department.rejected_n or department.rejected_a) and (department.favorito_n or department.favorito_a) %}
-                        green
-                    {% elif (department.rejected_n or department.rejected_a) and not (department.favorito_n or department.favorito_a) %}
-                        red
-                    {% endif %}
-                    ">
-                {{ department.codigo }} - {{ department.title }}
-            </strong>
-            </a>
-            <!-- <a href="{{ department.link }}" class="department-link" target="_blank">Ver</a> -->
+        {% for search_department in departments %}
+            {% set all_favorite = search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length == search_department.reactions | length %}
+            <li class="{% if all_favorite %} light-green {% endif %}">
+                <a href="{{ base_url }}/departments/{{ search_department.search_department_id }}" class="department-link">
+                    <strong class="department-title
+                        {% if search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length == search_department.reactions | length %}
+                            green
+                        {% elif search_department.reactions | selectattr('reaction', 'equalto', 'reject') | list | length == search_department.reactions | length %}
+                            red
+                        {% elif search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length > 0 and
+                        search_department.reactions | selectattr('reaction', 'equalto', 'reject') | list | length > 0 %}
+                            orange
+                        {% endif %}">
+                        {{ search_department.department.title }}
+                    </strong>
+                </a>
 
-            <div class="department-info">
-                <span class="price">Precio: {{ department.precio }}</span><br>
-                <span class="creation-date">Creado el: {{ department.creacion }}</span>
-            </div>
+                <div class="department-info">
+                    <span class="price">Precio: {{ search_department.department.price }}</span><br>
+                    <span class="creation-date">Creado el: {{ search_department.department.create_date }}</span>
+                </div>
 
-            {% if department.comentario_n %}
-            <div class="comment-container">
-                <span class="comment-format rounded-box-nico">N: {{ department.comentario_n }}</span>
-            </div>
-            {% endif %}
-            {% if department.comentario_a %}
-            <div class="comment-container">
-                <span class="comment-format rounded-box-ampi">A: {{ department.comentario_a }}</span>
-            </div>
-            {% endif %}
-
-            <div class="button-container">
-                {% if (person == 'nico' and not department.rejected_n) or (person == 'ampi' and not department.rejected_a) %}
-                <button class="button-reject" onclick="rejectDepartment('{{ department.id }}')">👎</button>
+                {% set last_comment = search_department.participant_comments
+                    | sort(attribute='create_date', reverse=True)
+                    | first %}
+                
+                {% if last_comment %}
+                    <div class="comment-list">
+                        <div class="comment-container rounded-box-nico">
+                            <span class="comment-format">{{ last_comment.participant.user.given_name }}: {{ last_comment.comment }}</span>
+                            <span class="comment-date">{{ last_comment.create_date }}</span>
+                        </div>
+                    </div>
                 {% endif %}
+
+                <div class="button-container">
+                    {% set user_reactions = search_department.reactions 
+                        | selectattr('participant_id', 'equalto', user_id)
+                        | rejectattr('reaction', 'equalto', none)
+                        | list %}
             
-                {% if (person == 'nico' and not department.favorito_n) or (person == 'ampi' and not department.favorito_a) %}
-                <button class="button-favorite" onclick="favoriteDepartment('{{ department.id }}')">👍</button>
-                {% endif %}
+                    {% set has_favorite = user_reactions
+                        | selectattr('reaction', 'equalto', 'favorite') 
+                        | list
+                        | length > 0 %}
+                    
+                    {% set has_rejected = user_reactions
+                        | selectattr('reaction', 'equalto', 'reject')
+                        | list
+                        | length > 0 %}
+                    
+                    {% if user_reactions | length == 0 or has_favorite %}
+                    <button class="button-reject" onclick="rejectDepartment('{{ search_department.search_department_id }}')">👎</button>
+                    {% endif %}
+            
+                    {% if user_reactions | length == 0 or has_rejected %}
+                    <button class="button-favorite" onclick="favoriteDepartment('{{ search_department.search_department_id }}')">👍</button>
+                    {% endif %}
 
-                <button class="button-comment" onclick="commentDepartment('{{ department.id }}')">💬</button>
-                <button onclick="window.location='{{ department.link }}'" target="_blank" class="button-open">👁️</button>
-            </div>
-        </li>
+                    <button class="button-comment" onclick="commentDepartment('{{ search_department.search_department_id }}')">💬</button>
+                    <button onclick="window.location='{{ search_department.department.link }}'" target="_blank" class="button-open">👁️</button>
+                </div>
+            </li>
         {% endfor %}
     </ul>
 </body>

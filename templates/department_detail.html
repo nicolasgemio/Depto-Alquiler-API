@@ -21,50 +21,66 @@
     </div>
 
     <div>
-        <h1 class="department-title 
-        {% if (department.rejected_n or department.rejected_a) and (department.favorito_n or department.favorito_a) %}
-            orange
-        {% elif not (department.rejected_n or department.rejected_a) and (department.favorito_n or department.favorito_a) %}
+        <h1 class="department-title
+        {% if search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length == search_department.reactions | length %}
             green
-        {% elif (department.rejected_n or department.rejected_a) and not (department.favorito_n or department.favorito_a) %}
+        {% elif search_department.reactions | selectattr('reaction', 'equalto', 'reject') | list | length == search_department.reactions | length %}
             red
+        {% elif search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length > 0 and
+          search_department.reactions | selectattr('reaction', 'equalto', 'reject') | list | length > 0 %}
+            orange
         {% endif %}
         ">
-        {{ department.title }}
-    </h1>
-    <p><strong>Código:</strong> {{ department.codigo }}</p>
-    <p><strong>Dirección:</strong> {{ department.direccion }}</p>
-    <p><strong>Precio:</strong> {{ department.precio }}</p>
-    <p><strong>Creado el:</strong> {{ department.creacion }}</p>
+            
+        {{ search_department.department.title }}
+        </h1>
+        <p><strong>Dirección:</strong> {{ search_department.department.address }}</p>
+        <p><strong>Precio:</strong> {{ search_department.department.price }}</p>
+        <p><strong>Creado el:</strong> {{ search_department.department.create_date }}</p>
 
-    {% if department.comentario_n %}
-    <div class="comment-container">
-        <span class="comment-format rounded-box-nico">N: {{ department.comentario_n }}</span>
-    </div>
-    {% endif %}
-    {% if department.comentario_a %}
-    <div class="comment-container">
-        <span class="comment-format rounded-box-ampi">A: {{ department.comentario_a }}</span>
-    </div>
-    {% endif %}
+        </br>
+        <div class="button-container">
+            <button onclick="goToDepartments('{{ search_department.search_id }}')" class="button-back">🔙</button>
+            <button onclick="window.location='{{ search_department.department.link }}'" target="_blank" class="button-open">👁️</button>
 
-    </br>
-    <div class="button-container">
-        <button onclick="backToDepartments('{{ department.id }}')" class="button-back">🔙</button>
-        <button onclick="window.location='{{ department.link }}'" target="_blank" class="button-open">👁️</button>
+            {% set user_reactions = search_department.reactions 
+                | selectattr('participant_id', 'equalto', user_id)
+                | rejectattr('reaction', 'equalto', none)
+                | list %}
+            
+            {% set has_favorite = user_reactions
+                | selectattr('reaction', 'equalto', 'favorite') 
+                | list
+                | length > 0 %}
+            
+            {% set has_rejected = user_reactions
+                | selectattr('reaction', 'equalto', 'reject')
+                | list
+                | length > 0 %}
+            
+            {% if user_reactions | length == 0 or has_favorite %}
+            <button class="button-reject" onclick="rejectDepartment('{{ search_department.search_department_id }}')">👎</button>
+            {% endif %}
+            
+            {% if user_reactions | length == 0 or has_rejected %}
+            <button class="button-favorite" onclick="favoriteDepartment('{{ search_department.search_department_id }}')">👍</button>
+            {% endif %}
 
-        {% if (person == 'nico' and not department.rejected_n) or (person == 'ampi' and not department.rejected_a) %}
-        <button class="button-reject" onclick="rejectDepartment('{{ department.id }}')">👎</button>
-        {% endif %}
-    
-        {% if (person == 'nico' and not department.favorito_n) or (person == 'ampi' and not department.favorito_a) %}
-        <button class="button-favorite" onclick="favoriteDepartment('{{ department.id }}')">👍</button>
-        {% endif %}
+            <button class="button-comment" onclick="commentDepartment('{{ search_department.search_department_id }}')">💬</button>
+            <button class="button-share" onclick="shareDepartment('{{ search_department.search_department_id }}')">📤</button>
+            <button onclick="removeDepartment('{{ search_department.search_department_id }}', '{{search_department.search_id}}')" class="button-remove">❌</button>
+        </div>
 
-        <button class="button-comment" onclick="commentDepartment('{{ department.id }}')">💬</button>
-        <button class="button-share" onclick="shareDepartment('{{ department.id }}')">📤</button>
-        <button onclick="removeDepartment('{{ department.id }}')" class="button-remove">❌</button>
-    </div>
+        <ul id="comment-list">
+            {% for comment in search_department.participant_comments %}
+            <li>
+                <div class="comment-container rounded-box-nico">
+                    <span class="comment-format ">{{ comment.participant.user.given_name }}: {{ comment.comment }}</span>
+                    <span class="comment-date">{{ comment.create_date }}</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </body>
 </html>

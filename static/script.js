@@ -1,7 +1,10 @@
-let currentDepartment = null;
+//BASE_URL = 'https://scarpdepto.vercel.app'
+BASE_URL = 'http://127.0.0.1:8000'
+
+let currentSearchDepartmentId = null;
 
 function commentDepartment(departmentId) {
-    currentDepartment = departmentId;
+    currentSearchDepartmentId = departmentId;
     document.getElementById("commentModal").style.display = "flex";
 }
 
@@ -16,10 +19,10 @@ async function submitComment() {
         return;
     }
 
-    const response = await fetch(`/comment/${currentDepartment}`, {
+    const response = await fetch(`/comment/${currentSearchDepartmentId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comentario: comment })
+        body: JSON.stringify({ commentary: comment })
     });
 
     if (response.ok) {
@@ -32,32 +35,38 @@ async function submitComment() {
 
 let removeTimeout; // Variable para almacenar el temporizador
 
-async function rejectDepartment(departmentId) {
-    const response = await fetch(`/reject/${departmentId}`, {
+async function rejectDepartment(search_department_id) {
+    const response = await fetch(`/reject/${search_department_id}`, {
         method: 'POST'
     });
+
+    const data = await response.json();
+
     if (response.ok) {
-        alert(`Departamento ${departmentId} rechazado`);
-        location.reload();  // Recargar la página para reflejar los cambios
+        alert(`✅ ${data.mensaje}`);
+        location.reload();
     } else {
-        alert('Error al rechazar el departamento');
+        alert(`❌ ${data.mensaje}`);
     }
 }
 
-async function favoriteDepartment(departmentId) {
-    const response = await fetch(`/favorite/${departmentId}`, {
+async function favoriteDepartment(search_department_id) {
+    const response = await fetch(`/favorite/${search_department_id}`, {
         method: 'POST'
     });
+
+    const data = await response.json();
+
     if (response.ok) {
-        alert(`Departamento ${departmentId} marcado como favorito`);
-        location.reload();  // Recargar la página para reflejar los cambios
+        alert(`✅ ${data.mensaje}`);
+        location.reload();
     } else {
-        alert('Error al marcar el departamento como favorito');
+        alert(`❌ ${data.mensaje}`);
     }
 }
 
 async function shareDepartment(departmentId) {
-    const url = `https://scarpdepto.vercel.app/departments/${departmentId}`;
+    const url = `${BASE_URL}}/departments/${departmentId}`;
     
     if (navigator.share) {
         try {
@@ -82,45 +91,26 @@ async function shareDepartment(departmentId) {
     }
 }
 
-async function removeDepartment(departmentId) {
-    const response = await fetch(`/remove/${departmentId}`, {
-        method: 'POST'
-    });
-    if (response.ok) {
-        alert(`Departamento ${departmentId} removido correctamente`);
-        location.reload();  // Recargar la página para reflejar los cambios
-    } else {
-        alert('Error al remover el departamento como favorito');
-    }
-    window.location.href = "https://scarpdepto.vercel.app/departments";
-}
-
-async function backToDepartments(person) {
-    window.location.href = "https://scarpdepto.vercel.app/departments";
+async function goToDepartments(seach_id) {
+    window.location.href = `${BASE_URL}/departments?search_id=${seach_id}`;
 }
 
 async function goToSeleccionarPersona() {
-    window.location.href = "https://scarpdepto.vercel.app/seleccionar-persona";
+    window.location.href = `${BASE_URL}}/seleccionar-persona/`;
 }
 
-function startRemoveTimer(departmentId) {
-    rejectTimeout = setTimeout(() => {
-        removeDepartment(departmentId);
-    }, 3000); // Espera 2 segundos antes de ejecutar la acción
-}
-
-function clearRemoveTimer() {
-    clearTimeout(removeTimeout); // Cancela la acción si se suelta antes
-}
-
-async function removeDepartment(departmentId) {
-    const response = await fetch(`/remove/${departmentId}`, {
+async function removeDepartment(searchDepartmentId, search_id) {
+    const response = await fetch(`/remove/${searchDepartmentId}`, {
          method: 'POST'
     });
+    
+    const data = await response.json();
 
     if (response.ok) {
-        alert(`Departamento ${departmentId} removido`);
-        location.reload();
+        alert(`✅ ${data.mensaje}`);
+        location.reload()
+        window.location.href =  `${BASE_URL}/departments?search_id=${search_id}`;
+        
     } else {
         alert('Error al remover el departamento');
     }
@@ -130,8 +120,7 @@ async function setPersonCookie() {
     const person = document.getElementById("personSelector").value;
     document.cookie = `person=${encodeURIComponent(person)}; path=/; max-age=31536000`; // Expira en 1 año
 
-    window.location.href = "https://scarpdepto.vercel.app/departments";
-}
+    window.location.href = `${BASE_URL}}/departments/`;}
 
 function getCookie(name) {
     const cookies = document.cookie.split("; ");
@@ -142,4 +131,8 @@ function getCookie(name) {
         }
     }
     return null; // Retorna null si la cookie no existe
+}
+
+function logut() {
+    window.location.href = '/auth/logout';
 }
