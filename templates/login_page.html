@@ -58,7 +58,27 @@
       align-items: center;
       justify-content: center;
       padding: 2rem;
+      gap: 3rem;
       background: url("{{ url_for('static', path='fondo-llaves.jpg') }}") center/cover no-repeat;
+    }
+    .info-pane {
+      max-width: 420px;
+      margin-right: 2rem;
+      padding: 1rem;
+    }
+    .info-pane h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .info-pane p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+    .login-pane {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
     }
     .login-card {
       background-color: rgba(255,255,255,0.95);
@@ -72,14 +92,19 @@
     .login-card.dark-mode {
       background-color: rgba(55,65,81,0.9);
     }
-    .login-card h1 {
-      font-size: 1.75rem;
-      margin-bottom: 1.5rem;
-      font-weight: 600;
-      color: var(--text-dark);
-    }
-    body.dark-mode .login-card h1 {
-      color: var(--text-light);
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+        text-align: center;
+      }
+      .info-pane {
+        margin-right: 0;
+        margin-bottom: 2rem;
+      }
+      .login-pane {
+        justify-content: center;
+        width: 100%;
+      }
     }
     .btn-google {
       background-color: #4285F4;
@@ -141,13 +166,18 @@
 
   <!-- Login -->
   <main>
-    <div class="login-card" id="login-card">
+    <div class="info-pane">
       <h1>Bienvenido a <strong>CO-RADAR</strong></h1>
-      <form action="/auth/login" method="get">
-        <button type="submit" class="btn-google" aria-label="Iniciar sesión con Google">
-          <i class="fab fa-google"></i> Iniciar sesión con Google
-        </button>
-      </form>
+      <p>Gestiona tus búsquedas de alquiler con eficiencia y claridad.</p>
+    </div>
+    <div class="login-pane">
+      <div class="login-card" id="login-card">
+        <form action="/auth/login" method="get">
+          <button type="submit" class="btn-google" aria-label="Iniciar sesión con Google">
+            <i class="fab fa-google"></i> Iniciar sesión con Google
+          </button>
+        </form>
+      </div>
     </div>
   </main>
 
