@@ -1,7 +1,8 @@
 *.env
 venv
-*.json
 scrapping-deptos-firebase-adminsdk-fbsvc-6339a65ce9.json
-vercel.json
 __pycache__
-.vercel
+project.json
+README.txt
+launch.json
+scrapping-deptos-2-firebase-adminsdk-fbsvc-0d283c648f.json
