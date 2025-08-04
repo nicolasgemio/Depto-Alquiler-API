@@ -1,13 +1,10 @@
 import os
 from datetime import datetime
-
-import firebase_admin
 import pytz
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from firebase_admin import credentials, firestore
 
 from fastapi import APIRouter, Request
 from repositories.department_repository import DepartmentRepository
@@ -19,15 +16,9 @@ class SearchController:
         self.router = router
         self.service = service
         self.user_service = user_service
-        self.db = firestore.client()
-
         self.templates = Jinja2Templates(directory="templates")
 
         self._define_routes()
-
-    def _init_firebase(self):
-        cred = credentials.Certificate("scrapping-deptos-2-firebase-adminsdk-fbsvc-0d283c648f.json")
-        firebase_admin.initialize_app(cred)
 
     def _define_routes(self):
         @self.router.get("/searches", response_class=HTMLResponse)

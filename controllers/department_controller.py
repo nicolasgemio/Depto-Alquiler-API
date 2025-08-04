@@ -1,12 +1,9 @@
-import os
 from datetime import datetime
-import firebase_admin
 import pytz
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from firebase_admin import credentials, firestore
 from services.department_service import DepartmentService
 from fastapi import APIRouter, Request, Query
 from services.department_service import DepartmentService
@@ -17,18 +14,10 @@ class DepartmentController:
     def __init__(self, router: APIRouter, service: DepartmentService):
         self.router = router
         self.service = service
-        # self.credentials = credentials.Certificate("scrapping-deptos-2-firebase-adminsdk-fbsvc-0d283c648f.json")
-        # firebase_admin.initialize_app(self.credentials)
-        self.db = firestore.client()
-
         self.templates = Jinja2Templates(directory="templates")
 
         self._mount_routes()
         self._define_routes()
-
-    def _init_firebase(self):
-        cred = credentials.Certificate("scrapping-deptos-2-firebase-adminsdk-fbsvc-0d283c648f.json")
-        firebase_admin.initialize_app(cred)
 
     def _mount_routes(self):
         pass
@@ -58,7 +47,7 @@ class DepartmentController:
             if search_id is None or search_id == "":
                 return RedirectResponse(url='/searches')
             
-            departmens = self.service.get_departments(search_id)
+            departmens = self.service.get_departments(search_id, user.user_id)
 
             return self.templates.TemplateResponse("departments.html", {"request": request, "departments": departmens, "user_id": user.user_id})
 

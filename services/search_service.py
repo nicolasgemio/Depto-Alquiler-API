@@ -19,10 +19,7 @@ class SearchService:
         return self.repository.get_search_department(search_department_id)
     
     def get_search_participants(self, search_id: UUID) -> list[SearchParticipantDto]:
-        search_participants = self.repository.get_search_participants(search_id)
-
-        return [SearchParticipantDto.model_validate(search_participant) for search_participant in search_participants]
-
+        return self.repository.get_search_participants(search_id)
     
     def get_local_time(create_date):
         utc_dt = create_date.replace(tzinfo=pytz.utc)

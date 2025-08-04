@@ -5,15 +5,12 @@ load_dotenv('config/.env')
 env = os.getenv("APP_ENV", "development")
 load_dotenv(f"config/.{env}.env")
 
-import firebase_admin
-import pytz
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from firebase_admin import credentials, firestore
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -28,11 +25,6 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 import models  # <--- Esto importa todos los modelos definidos en models/__init__.py
 from fastapi import APIRouter, Request
-
-
-cred = credentials.Certificate("scrapping-deptos-2-firebase-adminsdk-fbsvc-0d283c648f.json")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
 
 container = Container()  # creamos el contenedor
 app = FastAPI()
@@ -70,68 +62,6 @@ app.add_middleware(
     allow_methods=["*"],  # Permite todos los métodos (GET, POST, etc.)
     allow_headers=["*"],  # Permite todos los headers
 )
-
-def sort_key_ampi(doc):
-    data = doc.to_dict()
-    rejected_n = data.get("rejected_n", False)
-    rejected_a = data.get("rejected_a", False)
-    favorito_n = data.get("favorito_n", False)
-    favorito_a = data.get("favorito_a", False)
-    creacion = data.get("creacion", datetime.min)  # Si no tiene fecha, usa datetime.min
-    
-    # Asignamos prioridad (valores más pequeños van primeros en sorted)
-    if favorito_n or favorito_a:
-        priority = 0  # Favoritos primero
-    elif rejected_n:
-        priority = 1  # Luego los rechazados por Nico
-    elif not rejected_a:
-        priority = 2  # Los que no están rechazados por nadie en el medio
-    else:
-        priority = 3  # Los rechazados por Ampi al final
-
-    return (priority, creacion)
-
-def sort_key_nico(doc):
-    data = doc.to_dict()
-    rejected_n = data.get("rejected_n", False)
-    rejected_a = data.get("rejected_a", False)
-    favorito_n = data.get("favorito_n", False)
-    favorito_a = data.get("favorito_a", False)
-    creacion = data.get("creacion", datetime.min)  # Si no tiene fecha, usa datetime.min
-
-    # Asignamos prioridad (valores más pequeños van primeros en sorted)
-    if favorito_n or favorito_a:
-        priority = 0  # Favoritos primero
-    elif rejected_a:
-        priority = 1  # Luego los rechazados por Nico
-    elif not rejected_n:
-        priority = 2  # Los que no están rechazados por nadie en el medio
-    else:
-        priority = 3  # Los rechazados por Ampi al final
-
-    return (priority, creacion)
-
-
-class CommentRequest(BaseModel):
-    comentario: str
-
-@app.post("/comment/{departamento_id}")
-def comentar_departamento(departamento_id: str, request: Request, body: CommentRequest):
-    comentario = body.comentario
-
-    person = request.cookies.get("person")
-    if not person:
-        return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
-
-    if person not in ['nico', 'ampi']:
-        raise HTTPException(status_code=400, detail="Persona no válida")
-
-    campo = "comentario_n" if person == "nico" else "comentario_a"
-    
-    db.collection("deptos").document(departamento_id).update({campo: comentario})
-    
-    return {"mensaje": "Departamento comentado"}
-
 
 if __name__ == "__main__":
     import uvicorn

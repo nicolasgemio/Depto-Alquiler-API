@@ -19,14 +19,12 @@ class DepartmentService:
         self.search_service = search_service
 
 
-    def get_departments(self, search_id) -> list[SearchDepartmentDto]:
+    def get_departments(self, search_id, user_id) -> list[SearchDepartmentDto]:
         if search_id is None or search_id == UUID(int=0):
             return []
         
         participants = self.search_service.get_search_participants(search_id)
-        departments = self.repository.get_by_search_id(search_id)
-
-        search_departments_dto = [SearchDepartmentDto.model_validate(department) for department in departments]
+        search_departments_dto = self.repository.get_by_search_id(search_id, user_id)
 
         for department in search_departments_dto:
             for participant in participants:
@@ -69,7 +67,7 @@ class DepartmentService:
         
         return self.repository.react_department(new_reaction)
     
-    def remove_department(self, search_department_id: str,  google_id: str) -> None:
+    def remove_department(self, search_department_id: str,  google_id: str) -> ParticipantReaction:
         user = self.user_service.get_user(google_id)
         search_department = self.search_service.get_search_department(search_department_id)
 
@@ -104,9 +102,7 @@ class DepartmentService:
         if search_department_id is None or search_department_id == UUID(int=0):
             return []
 
-        search_department =self.repository.get_by_search_department_id(search_department_id)
-        search_department_dto = SearchDepartmentDto.model_validate(search_department) 
-
+        search_department_dto =self.repository.get_by_search_department_id(search_department_id)
         participants = self.search_service.get_search_participants(search_department_dto.search_id)
 
         for participant in participants:
