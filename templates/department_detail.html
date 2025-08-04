@@ -1,86 +1,263 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
-    <script src="{{ url_for('static', path='/script.js') }}"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <title>Detalles del Departamento</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="DeptoMatch: detalles del departamento" />
+  <title>Detalles del Departamento | DeptoMatch</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --brand-primary: #1e3a8a;
+      --brand-secondary: #374151;
+      --bg-light:    #f9fafb;
+      --bg-dark:     #1f2937;
+      --text-light:  #f9fafb;
+      --text-dark:   #111827;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+      padding-top: 56px;
+      transition: background .3s, color .3s;
+    }
+    body.dark-mode {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+    }
+    .navbar {
+      background-color: var(--brand-primary);
+    }
+    .navbar .nav-link,
+    .navbar .navbar-brand {
+      color: #fff !important;
+    }
+    .navbar .nav-link:hover {
+      text-decoration: underline;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 0;
+      min-height: calc(100vh - 56px - 100px);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 2rem;
+      border-radius: .5rem;
+      max-width: 500px;
+      width: 90%;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: .5rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+    footer {
+      background-color: #fff;
+      border-top: 1px solid #e5e7eb;
+      padding: 1rem 0;
+      text-align: center;
+      font-size: .9rem;
+    }
+    body.dark-mode footer {
+      background-color: #1f2937;
+      color: #d1d5db;
+      border-color: #4b5563;
+    }
+    footer a { margin: 0 .5rem; color: inherit; }
+    .button-container button { margin-right: .5rem; }
+    #comment-list { list-style: none; padding: 0; margin-top: 1rem; }
+    #comment-list li + li { margin-top: .75rem; }
+  </style>
 </head>
 <body>
-    <div id="commentModal" class="modal">
-        <div class="modal-content">
-            <h2>Agregar comentario</h2>
-            <textarea id="commentText" placeholder="Escribe tu comentario aquí..."></textarea>
-            <div class="modal-buttons">
-                <button class="button-favorite" onclick="submitComment()">Comentar</button>
-                <button class="button-comment" onclick="closeModal()">Cancelar</button>
-            </div>
-        </div>
-    </div>
 
-    <div>
-        <h1 class="department-title
-        {% if search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length == search_department.reactions | length %}
-            green
-        {% elif search_department.reactions | selectattr('reaction', 'equalto', 'reject') | list | length == search_department.reactions | length %}
-            red
-        {% elif search_department.reactions | selectattr('reaction', 'equalto', 'favorite') | list | length > 0 and
-          search_department.reactions | selectattr('reaction', 'equalto', 'reject') | list | length > 0 %}
-            orange
-        {% endif %}
-        ">
-            
-        {{ search_department.department.title }}
-        </h1>
-        <p><strong>Dirección:</strong> {{ search_department.department.address }}</p>
-        <p><strong>Precio:</strong> {{ search_department.department.price }}</p>
-        <p><strong>Creado el:</strong> {{ search_department.department.create_date }}</p>
-
-        </br>
-        <div class="button-container">
-            <button onclick="goToDepartments('{{ search_department.search_id }}')" class="button-back">🔙</button>
-            <button onclick="window.location='{{ search_department.department.link }}'" target="_blank" class="button-open">👁️</button>
-
-            {% set user_reactions = search_department.reactions 
-                | selectattr('participant_id', 'equalto', user_id)
-                | rejectattr('reaction', 'equalto', none)
-                | list %}
-            
-            {% set has_favorite = user_reactions
-                | selectattr('reaction', 'equalto', 'favorite') 
-                | list
-                | length > 0 %}
-            
-            {% set has_rejected = user_reactions
-                | selectattr('reaction', 'equalto', 'reject')
-                | list
-                | length > 0 %}
-            
-            {% if user_reactions | length == 0 or has_favorite %}
-            <button class="button-reject" onclick="rejectDepartment('{{ search_department.search_department_id }}')">👎</button>
-            {% endif %}
-            
-            {% if user_reactions | length == 0 or has_rejected %}
-            <button class="button-favorite" onclick="favoriteDepartment('{{ search_department.search_department_id }}')">👍</button>
-            {% endif %}
-
-            <button class="button-comment" onclick="commentDepartment('{{ search_department.search_department_id }}')">💬</button>
-            <button class="button-share" onclick="shareDepartment('{{ search_department.search_department_id }}')">📤</button>
-            <button onclick="removeDepartment('{{ search_department.search_department_id }}', '{{search_department.search_id}}')" class="button-remove">❌</button>
-        </div>
-
-        <ul id="comment-list">
-            {% for comment in search_department.participant_comments %}
-            <li>
-                <div class="comment-container rounded-box-nico">
-                    <span class="comment-format ">{{ comment.participant.user.given_name }}: {{ comment.comment }}</span>
-                    <span class="comment-date">{{ comment.create_date }}</span>
-                </div>
-            </li>
-            {% endfor %}
+  <!-- Navbar -->
+  <nav class="navbar fixed-top navbar-expand-lg" aria-label="Main navigation">
+    <div class="container">
+      <a class="navbar-brand" href="/"><strong>DeptoMatch</strong></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
+              aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon" style="filter: invert(1)"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/searches">Buscar</a></li>
         </ul>
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item me-3">
+            <button class="btn btn-link text-white p-0" id="theme-toggle" aria-label="Alternar modo claro/oscuro">
+              <i id="theme-icon" class="fa-solid fa-moon"></i>
+            </button>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" href="#" id="accountMenu"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-regular fa-circle-user fa-lg"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountMenu">
+              <li><a class="dropdown-item" href="/account/profile">Mi Perfil</a></li>
+              <li><a class="dropdown-item" href="/account/settings">Ajustes</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="/auth/logout">Cerrar sesión</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
     </div>
+  </nav>
+
+  <!-- Modal de comentario -->
+  <div id="commentModal" class="modal">
+    <div class="modal-content">
+      <h2>Agregar comentario</h2>
+      <textarea id="commentText" class="form-control" placeholder="Escribe tu comentario aquí..." rows="4"></textarea>
+      <div class="modal-buttons">
+        <button class="btn btn-primary" onclick="submitComment()">Comentar</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="container mt-3">
+    <ol class="breadcrumb bg-transparent px-0">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/searches">Mis Búsquedas</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+    </ol>
+  </nav>
+
+  <!-- Contenido principal -->
+  <main class="container">
+    <div class="mb-4">
+      {% set favs = search_department.reactions 
+         | selectattr('reaction','equalto','favorite') | list | length %}
+      {% set rejects = search_department.reactions 
+         | selectattr('reaction','equalto','reject') | list | length %}
+      {% set all_fav = favs == search_department.reactions|length %}
+      <h1 class="fw-bold
+                  {% if all_fav %} text-success
+                  {% elif rejects == search_department.reactions|length %} text-danger
+                  {% elif favs>0 and rejects>0 %} text-warning{% endif %}">
+        {{ search_department.department.title }}
+      </h1>
+      <p><strong>Dirección:</strong> {{ search_department.department.address }}</p>
+      <p><strong>Precio:</strong> {{ search_department.department.price }}</p>
+      <p><strong>Creado el:</strong> {{ search_department.department.create_date }}</p>
+    </div>
+
+    <div class="mb-4 button-container">
+      <button class="btn btn-outline-secondary btn-sm" onclick="goToDepartments('{{ search_department.search_id }}')">
+        🔙 Volver
+      </button>
+      <button class="btn btn-outline-secondary btn-sm"
+              onclick="window.open('{{ search_department.department.link }}','_blank')">👁️ Ver enlace</button>
+
+      {% set user_reactions = search_department.reactions 
+           | selectattr('participant_id','equalto',user_id)
+           | rejectattr('reaction','equalto',none) | list %}
+      {% set has_fav = user_reactions 
+           | selectattr('reaction','equalto','favorite') | list | length > 0 %}
+      {% set has_rej = user_reactions 
+           | selectattr('reaction','equalto','reject') | list | length > 0 %}
+
+      {% if user_reactions|length == 0 or has_fav %}
+      <button class="btn btn-outline-danger btn-sm"
+              onclick="rejectDepartment('{{ search_department.search_department_id }}')">👎</button>
+      {% endif %}
+      {% if user_reactions|length == 0 or has_rej %}
+      <button class="btn btn-outline-success btn-sm"
+              onclick="favoriteDepartment('{{ search_department.search_department_id }}')">👍</button>
+      {% endif %}
+      <button class="btn btn-outline-primary btn-sm"
+              onclick="commentDepartment('{{ search_department.search_department_id }}')">💬</button>
+      <button class="btn btn-outline-info btn-sm"
+              onclick="shareDepartment('{{ search_department.search_department_id }}')">📤</button>
+      <button class="btn btn-outline-danger btn-sm"
+              onclick="removeDepartment('{{ search_department.search_department_id }}','{{ search_department.search_id }}')">❌</button>
+    </div>
+
+    <ul id="comment-list" class="flex-grow-1 overflow-auto">
+      {% for comment in search_department.participant_comments %}
+      <li>
+        <div class="p-3 bg-light rounded">
+          <strong>{{ comment.participant.user.given_name }}:</strong>
+          {{ comment.comment }}
+          <div class="text-end small text-muted">{{ comment.create_date }}</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container text-center">
+      <p>© 2025 DeptoMatch. Todos los derechos reservados.</p>
+      <p>
+        <a href="/">Home</a>
+        <a href="/searches">Buscar</a>
+        <a href="/help">Ayuda</a>
+        <a href="/privacy">Política de Privacidad</a>
+        <a href="/terms">Términos y Condiciones</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Tu script.js -->
+  <script src="{{ url_for('static', path='/script.js') }}"></script>
+  <script>
+    // Toggle modo oscuro
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon   = document.getElementById('theme-icon');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      themeIcon.classList.toggle('fa-sun');
+      themeIcon.classList.toggle('fa-moon');
+    });
+
+    // Mostrar / cerrar modal
+    function commentDepartment(id) {
+      window.currentDeptId = id;
+      document.getElementById('commentModal').classList.add('d-flex');
+    }
+    function closeModal() {
+      document.getElementById('commentModal').classList.remove('d-flex');
+    }
+    function submitComment() {
+      const text = document.getElementById('commentText').value;
+      // lógica de envío...
+      closeModal();
+    }
+  </script>
 </body>
 </html>

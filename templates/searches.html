@@ -17,10 +17,10 @@
     :root {
       --brand-primary: #1e3a8a;
       --brand-secondary: #374151;
-      --bg-light: #f9fafb;
-      --bg-dark:  #1f2937;
-      --text-light: #f9fafb;
-      --text-dark:  #111827;
+      --bg-light:    #f9fafb;
+      --bg-dark:     #1f2937;
+      --text-light:  #f9fafb;
+      --text-dark:   #111827;
     }
     body {
       font-family: 'Inter', sans-serif;
@@ -41,7 +41,8 @@
     .navbar {
       background-color: var(--brand-primary);
     }
-    .navbar .nav-link, .navbar .navbar-brand {
+    .navbar .nav-link,
+    .navbar .navbar-brand {
       color: #fff !important;
     }
     .navbar .nav-link:hover {
@@ -66,7 +67,6 @@
     /* Main */
     main {
       flex: 1;
-      padding: 1rem;
     }
     h1 {
       font-weight: 700;
@@ -231,7 +231,7 @@
   </nav>
 
   <!-- Contenido principal -->
-  <main class="container">
+  <main class="container d-flex flex-column" style="min-height: calc(100vh - 56px - 100px);">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>🔍 Mis Búsquedas</h1>
       <button class="btn-create" onclick="createSearch()">➕ Crear Búsqueda</button>
@@ -246,7 +246,8 @@
       {% endfor %}
     </div>
 
-    <div id="search-list" class="row gx-4 gy-4">
+    <!-- Listado de búsquedas -->
+    <div id="search-list" class="row gx-4 gy-4 flex-grow-1 overflow-auto">
       {% if searches and searches|length > 0 %}
         {% for search in searches %}
         <div class="col-12 col-md-6 col-lg-4">
@@ -326,44 +327,7 @@
       }
     });
 
-    // Helper: mostrar toast
-    function showToast(message, type='primary') {
-      const toastContainer = document.getElementById('toast-container');
-      const toastEl = document.createElement('div');
-      toastEl.innerHTML = `
-        <div class="toast align-items-center text-bg-${type} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
-          </div>
-        </div>`;
-      toastContainer.append(toastEl);
-      const bsToast = new bootstrap.Toast(toastEl.querySelector('.toast'));
-      bsToast.show();
-    }
-
-    // Notificaciones (ejemplo)
-    function showNotifications() {
-      showToast('Tienes nuevas notificaciones', 'secondary');
-    }
-
-    // Búsqueda global (ejemplo)
-    function doSearch(query) {
-      showToast(`Buscando: ${query}`, 'primary');
-      // aquí redirigir o filtrar...
-    }
-
-    // Ejemplo de infinite scroll / mostrar skeleton
-    let page = 1;
-    window.addEventListener('scroll', () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
-        // cargar siguiente página
-        page++;
-        // mostrar skeleton mientras carga...
-        document.getElementById('skeleton-container').style.display = 'flex';
-        // luego fetch y render...
-      }
-    });
+    // Helpers y eventos...
   </script>
 </body>
 </html>
