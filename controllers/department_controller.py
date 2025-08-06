@@ -9,6 +9,8 @@ from fastapi import APIRouter, Request, Query
 from services.department_service import DepartmentService
 from enumerables.reaction_type_enum import ReactionTypeEnum
 from dtos.comment_request import CommentRequest
+import os
+from dotenv import load_dotenv
 
 class DepartmentController:
     def __init__(self, router: APIRouter, service: DepartmentService):
@@ -162,18 +164,13 @@ class DepartmentController:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
         
-            person = request.cookies.get("person")
-            if not person:
-                return templates.TemplateResponse("seleccionar_persona.html", {"request": request })
+        @self.router.get("/config")
+        def get_config():
+            load_dotenv('config/.env')
+            env = os.getenv("APP_ENV", "development")
+            load_dotenv(f"config/.{env}.env")
 
-            if person not in ['nico', 'ampi']:
-                raise HTTPException(status_code=400, detail="Persona no válida")
-
-            campo = "comentario_n" if person == "nico" else "comentario_a"
-
-            db.collection("deptos").document(departamento_id).update({campo: comentario})
-
-            return {"mensaje": "Departamento comentado"}
+            return { "base_url": os.getenv("BASE_URL") }
 
 
     def get_local_time(self, create_date):

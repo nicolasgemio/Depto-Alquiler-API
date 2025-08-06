@@ -7,7 +7,6 @@ from database import SessionLocal
 from sqlalchemy.orm import joinedload
 from uuid import UUID
 from dtos.search_participant_dto import SearchParticipantDto
-from dtos.search_department_dto import SearchDepartmentDto
 
 class SearchRepository:
     def __init__(self):

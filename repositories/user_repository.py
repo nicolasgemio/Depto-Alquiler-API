@@ -1,4 +1,3 @@
-from dtos.user_dto import UserDto
 from models.user import User
 from database import SessionLocal
 

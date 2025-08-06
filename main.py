@@ -5,26 +5,21 @@ load_dotenv('config/.env')
 env = os.getenv("APP_ENV", "development")
 load_dotenv(f"config/.{env}.env")
 
-from datetime import datetime
-from fastapi import FastAPI, HTTPException, Response, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.requests import Request
 from utils.containers import Container
 from controllers.department_controller import DepartmentController
 from controllers.auth_controller import AuthController
 from controllers.search_controller import SearchController
-from fastapi.responses import RedirectResponse
 import os
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models  # <--- Esto importa todos los modelos definidos en models/__init__.py
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 
 container = Container()  # creamos el contenedor
 app = FastAPI()
