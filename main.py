@@ -19,7 +19,8 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models  # <--- Esto importa todos los modelos definidos en models/__init__.py
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 
 container = Container()  # creamos el contenedor
 app = FastAPI()
@@ -33,6 +34,13 @@ def get_db():
     finally:
         db.close()
 
+@app.get("/")
+def index(request: Request):
+    user = request.session.get('user')
+    if user:
+        return RedirectResponse(url='/searches')
+    return RedirectResponse(url='/login_page')
+
 @app.get("/test")
 def test_db(db: Session = Depends(get_db)):
     # Solo para testear conexión
@@ -41,7 +49,6 @@ def test_db(db: Session = Depends(get_db)):
 auth_controller = AuthController(router, container.user_service())
 search_controller = SearchController(router, container.search_service(), container.user_service())
 department_controller = DepartmentController(router, container.department_service())
-
 
 app.include_router(router, prefix="/auth")
 app.include_router(department_controller.router)

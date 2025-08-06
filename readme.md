@@ -40,3 +40,8 @@ Modelo relacional basado en SQL Server. Algunas tablas clave:
    ```bash
    git clone https://github.com/nicolas-gemio/depto-alquiler-api.git
    cd depto-alquiler-api
+
+Deployar:
+docker build -t gemionicolas/scarpdepto:v1 .
+docker tag gemionicolas/scarpdepto:v1 gemionicolas/scarpdepto:v1
+docker push gemionicolas/scarpdepto:v1

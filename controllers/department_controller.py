@@ -25,13 +25,6 @@ class DepartmentController:
         pass
 
     def _define_routes(self):
-        @self.router.get("/")
-        async def index(request: Request):
-            user = request.session.get('user')
-            if user:
-                return RedirectResponse(url='/searches')
-            return RedirectResponse(url='/login_page')
-
         @self.router.get("/seleccionar-persona", response_class=HTMLResponse)
         async def seleccionar_persona(request: Request):
             return self.templates.TemplateResponse("departments.html", {"request": request})
