@@ -44,7 +44,7 @@ class DepartmentController:
             
             user = self.service.user_service.get_user(current_user.get('sub'))
             if not user:
-                return RedirectResponse(url='/logint_page')
+                return RedirectResponse(url='/login_page')
             
             if search_id is None or search_id == "":
                 return RedirectResponse(url='/searches')
@@ -163,14 +163,6 @@ class DepartmentController:
                     content={"mensaje": "Error al comentar el departamento"},
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
-        
-        @self.router.get("/config")
-        def get_config():
-            load_dotenv('config/.env')
-            env = os.getenv("APP_ENV", "development")
-            load_dotenv(f"config/.{env}.env")
-
-            return { "base_url": os.getenv("BASE_URL") }
 
 
     def get_local_time(self, create_date):

@@ -1,6 +1,3 @@
-//BASE_URL = 'https://scarpdepto.vercel.app'
-BASE_URL = 'http://127.0.0.1:8000'
-
 let currentSearchDepartmentId = null;
 
 function commentDepartment(departmentId) {
@@ -66,7 +63,7 @@ async function favoriteDepartment(search_department_id) {
 }
 
 async function shareDepartment(departmentId) {
-    const url = `${BASE_URL}}/departments/${departmentId}`;
+    const url = `$/departments/${departmentId}`;
     
     if (navigator.share) {
         try {
@@ -92,11 +89,11 @@ async function shareDepartment(departmentId) {
 }
 
 async function goToDepartments(seach_id) {
-    window.location.href = `${BASE_URL}/departments?search_id=${seach_id}`;
+    window.location.href = `/departments?search_id=${seach_id}`;
 }
 
 async function goToSeleccionarPersona() {
-    window.location.href = `${BASE_URL}}/seleccionar-persona/`;
+    window.location.href = `/seleccionar-persona/`;
 }
 
 async function removeDepartment(searchDepartmentId, search_id) {
@@ -109,7 +106,7 @@ async function removeDepartment(searchDepartmentId, search_id) {
     if (response.ok) {
         alert(`✅ ${data.mensaje}`);
         location.reload()
-        window.location.href =  `${BASE_URL}/departments?search_id=${search_id}`;
+        window.location.href =  `/departments?search_id=${search_id}`;
         
     } else {
         alert('Error al remover el departamento');
@@ -120,7 +117,7 @@ async function setPersonCookie() {
     const person = document.getElementById("personSelector").value;
     document.cookie = `person=${encodeURIComponent(person)}; path=/; max-age=31536000`; // Expira en 1 año
 
-    window.location.href = `${BASE_URL}}/departments/`;}
+    window.location.href = `/departments/`;}
 
 function getCookie(name) {
     const cookies = document.cookie.split("; ");
