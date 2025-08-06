@@ -42,6 +42,6 @@ Modelo relacional basado en SQL Server. Algunas tablas clave:
    cd depto-alquiler-api
 
 Deployar:
-docker build -t gemionicolas/scarpdepto:v1 .
+docker build -t myapp:latest .
 docker tag gemionicolas/scarpdepto:v1 gemionicolas/scarpdepto:v1
 docker push gemionicolas/scarpdepto:v1

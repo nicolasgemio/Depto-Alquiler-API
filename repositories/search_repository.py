@@ -15,11 +15,13 @@ class SearchRepository:
     def get_searches(self, user_id: str) -> SearchDto | None:
         with SessionLocal() as db:
             try:
-                searches = (db.query(Search)
-                            .filter(Search.user_id == user_id)
-                            .options(joinedload(Search.search_participants))
-                            .all())
-
+                searches = (
+                    db.query(Search)
+                    # filtra solo los Search que tengan al menos un SearchParticipant con user_id == user_id
+                    .filter(Search.search_participants.any(user_id=user_id))
+                    .options(joinedload(Search.search_participants))
+                    .all()
+                )
                 search_dto = [SearchDto.model_validate(search) for search in searches]
                 return search_dto
             except Exception as e:
