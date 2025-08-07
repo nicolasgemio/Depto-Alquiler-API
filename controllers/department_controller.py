@@ -26,7 +26,7 @@ class DepartmentController:
         pass
 
     def _define_routes(self):
-        @self.router.post("/departments", response_class=JSONResponse)
+        @self.router.post("/departments/create", response_class=JSONResponse)
         async def insert_department(department: dict):
             """
             Inserta un nuevo departamento.
