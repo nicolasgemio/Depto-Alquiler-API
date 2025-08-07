@@ -13,6 +13,13 @@ class DepartmentRepository:
         pass
 
     def get_by_search_department_id(self, search_department_id: str) -> SearchDepartmentDto | None:
+        """
+        Obtiene un SearchDepartmentDto a partir de un search_department_id.
+        Args:
+            search_department_id (str): ID del SearchDepartment a buscar.
+        Returns:
+            SearchDepartmentDto | None: DTO del departamento encontrado o None si no existe.
+        """
         with SessionLocal() as db:
             try:
                 search_department = (db.query(SearchDepartment)
@@ -31,6 +38,14 @@ class DepartmentRepository:
 
 
     def get_by_search_id(self, search_id: str, user_id: str) -> list[SearchDepartment]:
+        """
+        Obtiene una lista de SearchDepartmentDto asociados a un search_id y los ordena según las reacciones del usuario.
+        Args:
+            search_id (str): ID de la búsqueda.
+            user_id (str): ID del usuario para ordenar según sus reacciones.
+        Returns:
+            list[SearchDepartmentDto]: Lista ordenada de DTOs de departamentos encontrados.
+        """
         db = SessionLocal
         # 2) defino función para computar claves de orden
         def sort_key(sd: SearchDepartment):
@@ -73,6 +88,13 @@ class DepartmentRepository:
             return search_departments_dto
     
     def react_department(self, new_reaction: ParticipantReaction) -> ParticipantReaction:
+        """
+        Inserta o actualiza una reacción de un participante sobre un departamento.
+        Args:
+            new_reaction (ParticipantReaction): Objeto de reacción a insertar o actualizar.
+        Returns:
+            ParticipantReaction: Objeto de reacción insertado o actualizado.
+        """
         with SessionLocal() as db:
             try:
                 existing = db.query(ParticipantReaction).filter_by(
@@ -101,6 +123,14 @@ class DepartmentRepository:
                 raise
 
     def remove_department(self, search_department: SearchDepartment, new_reaction: ParticipantReaction) -> ParticipantReaction:
+        """
+        Marca un departamento como removido y registra la reacción correspondiente del participante.
+        Args:
+            search_department (SearchDepartment): Departamento a marcar como removido.
+            new_reaction (ParticipantReaction): Reacción a registrar.
+        Returns:
+            ParticipantReaction: Objeto de reacción insertado o actualizado.
+        """
         with SessionLocal as db:
             try:
 
@@ -135,6 +165,13 @@ class DepartmentRepository:
 
             
     def comment_department(self, new_commentary: ParticipantComment):
+        """
+        Inserta un nuevo comentario de participante sobre un departamento.
+        Args:
+            new_commentary (ParticipantComment): Comentario a insertar.
+        Returns:
+            ParticipantComment: Objeto de comentario insertado.
+        """
         with SessionLocal() as db:
             try:
                 db.add(new_commentary)
@@ -145,3 +182,41 @@ class DepartmentRepository:
                 db.rollback()
                 print(f"Error al comentar el departamento: {e}")
                 raise
+
+    def insert_department(self, department: Department) -> Department:
+        """
+        Inserta un nuevo departamento en la base de datos.
+        """
+        with SessionLocal() as db:
+            try:
+                db.add(department)
+                db.commit()
+                db.refresh(department)
+                return department
+            except Exception as e:
+                db.rollback()
+                print(f"Error al insertar el departamento: {e}")
+                raise
+
+    def exists_department(self, **kwargs) -> bool:
+        """
+        Verifica si existe un departamento según los campos clave pasados como kwargs.
+        Ejemplo: exists_department(external_id='1234')
+        """
+        with SessionLocal() as db:
+            query = db.query(Department).filter_by(**kwargs)
+            exists = db.query(query.exists()).scalar()
+            return bool(exists)
+
+    def get_nonexistent_department_codes(self, codes: list[str]) -> list[str]:
+        """
+        Dada una lista de department_code, retorna solo los que NO existen en la base de datos.
+        Args:
+            codes (list[str]): Lista de códigos a verificar.
+        Returns:
+            list[str]: Códigos que no existen en la base de datos.
+        """
+        with SessionLocal() as db:
+            existing = db.query(Department.department_code).filter(Department.department_code.in_(codes)).all()
+            existing_codes = set(row[0] for row in existing)
+            return [code for code in codes if code not in existing_codes]

@@ -18,3 +18,4 @@ class Department(Base):
     title = Column(String)
     create_date = Column(DateTime)
     search_links = relationship(SEARCH_DEPARTMENT_CLASS, back_populates="department")
+    department_code = Column(String(30))

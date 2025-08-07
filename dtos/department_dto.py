@@ -15,6 +15,7 @@ class DepartmentDto(BaseModel):
     publication_date: datetime | None = None
     create_date: datetime | None = None
     search_links: list[ParticipantReactionDto] | None = None
+    department_code: str
 
     class Config:
         from_attributes = True

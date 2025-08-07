@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request, Query
 from services.department_service import DepartmentService
 from enumerables.reaction_type_enum import ReactionTypeEnum
 from dtos.comment_request import CommentRequest
+from dtos.department_dto import DepartmentDto
 import os
 from dotenv import load_dotenv
 
@@ -25,6 +26,32 @@ class DepartmentController:
         pass
 
     def _define_routes(self):
+        @self.router.post("/departments", response_class=JSONResponse)
+        async def insert_department(department: dict):
+            """
+            Inserta un nuevo departamento.
+            """
+            try:
+                department_dto = DepartmentDto(**department)
+                dept = self.service.insert_department(department_dto)
+                return JSONResponse(content={"message": "Departamento insertado", "department_id": str(dept.department_id)}, status_code=201)
+            except Exception as e:
+                return JSONResponse(content={"message": f"Error al insertar el departamento: {e}"}, status_code=500)
+
+        @self.router.post("/departments/exists", response_class=JSONResponse)
+        async def nonexistent_departments(payload: dict):
+            """
+            Recibe una lista de department_code y devuelve solo los que NO existen en la base de datos.
+            """
+            try:
+                codes = payload.get("codes", [])
+                if not isinstance(codes, list):
+                    return JSONResponse(content={"message": "El campo 'codes' debe ser una lista."}, status_code=400)
+                non_existent = self.service.get_nonexistent_department_codes(codes)
+                return JSONResponse(content={"nonexistent_codes": non_existent}, status_code=200)
+            except Exception as e:
+                return JSONResponse(content={"message": f"Error al verificar existencia: {e}"}, status_code=500)
+
         @self.router.get("/seleccionar-persona", response_class=HTMLResponse)
         async def seleccionar_persona(request: Request):
             return self.templates.TemplateResponse("departments.html", {"request": request})

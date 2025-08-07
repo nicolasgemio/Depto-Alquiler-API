@@ -168,6 +168,7 @@
                   {% elif favs>0 and rejects>0 %} text-warning{% endif %}">
         {{ search_department.department.title }}
       </h1>
+      <p><strong>Código:</strong> {{ search_department.department.department_code }}</p>
       <p><strong>Dirección:</strong> {{ search_department.department.address }}</p>
       <p><strong>Precio:</strong> {{ search_department.department.price }}</p>
       <p><strong>Creado el:</strong> {{ search_department.department.create_date }}</p>

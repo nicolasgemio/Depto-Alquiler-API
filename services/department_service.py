@@ -10,6 +10,7 @@ from dtos.search_department_dto import SearchDepartmentDto
 from dtos.participant_and_reaction_dto import ParticipantAndReactionDto
 from dtos.participant_reaction_dto import ParticipantReactionDto
 from enumerables.reaction_type_enum import ReactionTypeEnum
+from models.department import Department
 
 
 class DepartmentService:
@@ -129,6 +130,49 @@ class DepartmentService:
                 )
 
         return search_department_dto
+
+    def insert_department(self, department_dto):
+        """
+        Inserta un nuevo departamento usando un DepartmentDto.
+        Args:
+            department_dto (DepartmentDto): DTO con los datos del departamento.
+        Returns:
+            Department: Objeto Department insertado.
+        """
+        department = Department(
+            department_id=department_dto.department_id or uuid.uuid4(),
+            link=department_dto.link,
+            address=department_dto.address,
+            neighborhood=department_dto.neighborhood,
+            photo_url=department_dto.photo_url,
+            price=department_dto.price,
+            price_currency=department_dto.price_currency,
+            publication_date=department_dto.publication_date,
+            title=department_dto.title,
+            create_date=department_dto.create_date,
+            department_code=department_dto.department_code
+        )
+        return self.repository.insert_department(department)
+
+    def exists_department(self, **kwargs):
+        """
+        Verifica si existe un departamento según los campos clave.
+        Args:
+            kwargs: Campos clave para buscar el departamento.
+        Returns:
+            bool: True si existe, False si no.
+        """
+        return self.repository.exists_department(**kwargs)
+
+    def get_nonexistent_department_codes(self, codes: list[str]) -> list[str]:
+        """
+        Dada una lista de department_code, retorna solo los que NO existen en la base de datos.
+        Args:
+            codes (list[str]): Lista de códigos a verificar.
+        Returns:
+            list[str]: Códigos que no existen en la base de datos.
+        """
+        return self.repository.get_nonexistent_department_codes(codes)
 
     def create_department(self, department_data):
         return self.repository.get_all(department_data)
