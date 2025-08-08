@@ -12,7 +12,22 @@ class SearchRepository:
     def __init__(self):
         pass
 
-    def get_searches(self, user_id: str) -> SearchDto | None:
+    def get_all(self) -> list[SearchDto]:
+        with SessionLocal() as db:
+            try:
+                searches = (
+                    db.query(Search)
+                    .options(joinedload(Search.search_filters))
+                    .all()
+                )
+                searches_dto = [SearchDto.model_validate(search) for search in searches]
+                return searches_dto
+            except Exception as e:
+                db.rollback()
+                print("Error al hacer commit:", e)
+                raise
+
+    def get_searches(self, user_id: str) -> list[SearchDto]:
         with SessionLocal() as db:
             try:
                 searches = (
@@ -22,8 +37,8 @@ class SearchRepository:
                     .options(joinedload(Search.search_participants))
                     .all()
                 )
-                search_dto = [SearchDto.model_validate(search) for search in searches]
-                return search_dto
+                searches_dto = [SearchDto.model_validate(search) for search in searches]
+                return searches_dto
             except Exception as e:
                 db.rollback()
                 print("Error al hacer commit:", e)

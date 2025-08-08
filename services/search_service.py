@@ -3,12 +3,17 @@ from repositories.search_repository import SearchRepository
 from models.search_department import SearchDepartment
 from uuid import UUID
 from dtos.search_participant_dto import SearchParticipantDto
+from dtos.search_dto import SearchDto
 
 class SearchService:
     def __init__(self, repository: SearchRepository):
         self.repository = repository
 
-    def get_searches(self, user_id):
+    def get_all(self) -> list[SearchDto]:
+        searches = self.repository.get_all()
+        return searches
+
+    def get_searches(self, user_id) -> list[SearchDto]:
         if user_id is None or user_id == UUID(int=0):
             return []
         

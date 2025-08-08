@@ -35,6 +35,9 @@ USER_CLASS = "User"
 SEARCH_PARTICIPANT_TABLE = "search_participants"
 SEARCH_PARTICIPANT_CLASS = "SearchParticipant"
 
+SEARCH_FILTER_TABLE = "search_filters"
+SEARCH_FILTER_CLASS = "SearchFilter"
+
 SEARCH_DEPARTMENT_TABLE = "search_departments"
 SEARCH_DEPARTMENT_CLASS = "SearchDepartment"
 

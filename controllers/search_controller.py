@@ -2,10 +2,9 @@ import os
 from datetime import datetime
 import pytz
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, APIRouter
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
 from fastapi import APIRouter, Request
 from repositories.department_repository import DepartmentRepository
 from services.search_service import SearchService
@@ -21,6 +20,18 @@ class SearchController:
         self._define_routes()
 
     def _define_routes(self):
+
+        @self.router.get("/all", response_class=JSONResponse)
+        async def get_all(request: Request, response: Response):
+            """
+            Obtener todas las búsquedas
+            """
+            try:
+                searches = self.service.get_all()
+                return JSONResponse(content={"message": "busquedas obtenidas", "searches": searches}, status_code=200)
+            except Exception as e:
+                return JSONResponse(content={"message": f"Error al obtener el busquedas: {e}"}, status_code=500)
+
         @self.router.get("/searches", response_class=HTMLResponse)
         async def get_searches(request: Request, response: Response):
             current_user = request.session.get('user')
@@ -28,7 +39,6 @@ class SearchController:
                 return self.templates.TemplateResponse("login_page.html", {"request": request })
 
             user = self.user_service.get_user(current_user.get('sub'))
-
             searches = self.service.get_searches(user.user_id)
         
             return self.templates.TemplateResponse("searches.html", {"request": request, "searches": searches, "current_user": current_user })
