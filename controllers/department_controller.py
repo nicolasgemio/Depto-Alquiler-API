@@ -184,28 +184,10 @@ class DepartmentController:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-
     def get_local_time(self, create_date):
         utc_dt = create_date.replace(tzinfo=pytz.utc)
         local_tz = pytz.timezone("America/Argentina/Buenos_Aires")
         return utc_dt.astimezone(local_tz).strftime("%Y-%m-%d %H:%M:%S")
-
-    def sort_key_nico(self, doc):
-        data = doc.to_dict()
-        favorito_n = data.get("favorito_n", False)
-        favorito_a = data.get("favorito_a", False)
-        rejected_a = data.get("rejected_a", False)
-        rejected_n = data.get("rejected_n", False)
-        creacion = data.get("creacion", datetime.min)
-        if favorito_n or favorito_a:
-            priority = 0
-        elif rejected_a:
-            priority = 1
-        elif not rejected_n:
-            priority = 2
-        else:
-            priority = 3
-        return (priority, creacion)
 
     def get_app(self):
         return self.app

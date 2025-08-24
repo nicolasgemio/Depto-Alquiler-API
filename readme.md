@@ -43,5 +43,5 @@ Modelo relacional basado en SQL Server. Algunas tablas clave:
 
 Deployar:
 docker build -t myapp:latest .
-docker tag gemionicolas/scarpdepto:v1 gemionicolas/scarpdepto:v1
+docker tag myapp:latest gemionicolas/scarpdepto:v28
 docker push gemionicolas/scarpdepto:v1
